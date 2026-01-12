@@ -2,8 +2,11 @@
 
 const authorize = (roles = []) => {
     return (req, res, next) => {
+
+        console.log('User role is: ', req.user.role);
+        
         if(!roles.includes(req.user.role)) {
-            return res.status(400).json({message: 'forbidden'});
+            return res.status(400).json({message: 'forbidden: not authorized'});
         }
 
         next();

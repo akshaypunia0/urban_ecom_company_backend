@@ -17,7 +17,34 @@ const getAllUsers = async (req, res) => {
     }
 }
 
+
+const getAllVendors = async (req, res) => {
+    try {
+        const vendors = await prisma.vendor.findMany({
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        return res.status(200).json({
+            message: vendors.length > 0 ? "success" : "no vendor exist",
+            vendors
+        })
+    } catch (error) {
+        return res.status(500).json({message: 'Error getting all vendors'})
+    }
+}
+
+
+
+
 export {
     getAllUsers,
-    
+    getAllVendors
 }
