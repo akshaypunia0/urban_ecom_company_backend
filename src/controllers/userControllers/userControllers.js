@@ -44,6 +44,40 @@ const applyVendor = async (req, res) => {
 }
 
 
+const getAllServices = async (req, res) => {
+    try {
+        const allServices = await prisma.service.findMany({
+            where: { active: true },
+            include: {
+                vendor: {
+                    select: {
+                        company: true,
+                        user: {
+                            select: {
+                                name: true,
+                                email: true
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        return res.status(200).json({
+            message: 'services fetched successsfully',
+            allServices
+        })
+
+    } catch (error) {
+        console.log(error);
+        
+        return res.status(500).json({ message: 'error while getting all services' })
+    }
+}
+
+
+
 export {
     applyVendor,
+    getAllServices
 }

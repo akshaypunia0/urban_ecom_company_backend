@@ -6,6 +6,7 @@ import { connectDB } from './src/config/db.js'
 import authRoutes from './src/routes/authRoutes/authRoutes.js'
 import adminRoutes from './src/routes/adminRoutes/adminRoutes.js'
 import userRoutes from './src/routes/userRoutes/userRoutes.js'
+import vendorRoutes from './src/routes/vendorRoutes/vendorRoutes.js'
 
 const app = express()
 
@@ -22,6 +23,7 @@ app.use(express.json())
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/vendor', vendorRoutes);
 
 //routes starts from here
 
