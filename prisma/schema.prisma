@@ -84,6 +84,9 @@ model Order {
   ordStatus ordStatus @default(PENDING)
   amount    Int
 
+  razorpayOrderId String? @unique
+  razorpayPaymentId String?
+
   user   User   @relation(fields: [userId], references: [id])
   vendor Vendor @relation(fields: [vendorId], references: [id])
   service   Service? @relation(fields: [serviceId], references: [id])
@@ -96,6 +99,7 @@ model Order {
 enum ordStatus {
   PENDING
   PAID
+  ACCEPTED
   COMPLETED
   CANCELLED
 }

@@ -149,6 +149,65 @@ const upadteSingleService = async (req, res) => {
 }
 
 
+const deleteServiceById = async (req, res) => {
+    
+    try {
+
+        const serviceId = req.params.id
+
+        const existingService = await prisma.service.findFirst({
+            where: {
+                id: serviceId,
+                vendor: {
+                    userId: req.user.id
+                }
+            }
+        })
+
+        if(!existingService) {
+            return res.status(400).json({message: 'service not found to delete'})
+        }
+
+        const deletedService = await prisma.service.delete({
+            where: { id: serviceId }
+        })
+
+        return res.status(200).json({
+            message: 'service deleted successfully',
+            deletedService
+        })
+
+    } catch (error) {
+        console.log(error);
+        
+        return res.status(500).json({ message: 'error while deleting this service' })
+    }
+}
+
+
+const myAllOrders = async (req, res) => {
+    try {
+        
+        const allOrders = await prisma.order.findMany({
+            where: {
+                vendor: {
+                    userId: req.user.id
+                }
+            }
+        })
+
+        return res.status(200).json({
+            message: allOrders.length > 0 ? 'orders fetched successfully' : 'no order yet',
+            allOrders
+        })
+
+    } catch (error) {
+        return res.status(500).json({message: 'error while fetching all your orders'})
+    }
+}
+
+
+
 
 
 export {
@@ -156,5 +215,6 @@ export {
     allServices,
     serviceById,
     upadteSingleService,
-
+    deleteServiceById,
+    myAllOrders,
 }

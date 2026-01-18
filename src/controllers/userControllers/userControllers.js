@@ -70,8 +70,47 @@ const getAllServices = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        
+
         return res.status(500).json({ message: 'error while getting all services' })
+    }
+}
+
+
+const getServiceById = async (req, res) => {
+
+    try {
+
+        const serviceId = req.params.id
+
+        const service = await prisma.service.findUnique({
+            where: { id: serviceId },
+            include: {
+                vendor: {
+                    select: {
+                        company: true,
+                        user: {
+                            select: {
+                                name: true,
+                                email: true
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        if (!service) {
+            return res.status(400).json({ message: 'service not found' })
+        }
+
+        return res.status(200).json({
+            message: 'service fetched successfully',
+            service
+        })
+
+
+    } catch (error) {
+        return res.status(500).json({ message: 'error while getting this service' })
     }
 }
 
@@ -79,5 +118,6 @@ const getAllServices = async (req, res) => {
 
 export {
     applyVendor,
-    getAllServices
+    getAllServices,
+    getServiceById
 }
