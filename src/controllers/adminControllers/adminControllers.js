@@ -86,20 +86,56 @@ const approveVendor = async (req, res) => {
 
 const rejectVendor = async (req, res) => {
     try {
-        
+
         const vendorId = req.params.id;
 
         await prisma.vendor.update({
             where: { id: vendorId },
-            data: { status: 'REJECTED'}
+            data: { status: 'REJECTED' }
         })
 
-        return res.status(200).json({message: 'Vendor application rejected'})
+        return res.status(200).json({ message: 'Vendor application rejected' })
 
     } catch (error) {
-        return res.status(500).json({message: 'error while rejecting vendor'})
+        return res.status(500).json({ message: 'error while rejecting vendor' })
     }
 }
+
+
+const allOrders = async (req, res) => {
+    try {
+
+        const allOrder = await prisma.order.findMany({
+            include: {
+                vendor: {
+                    select: {
+                        company: true
+                    }
+                },
+                service: {
+                    select: {
+                        title: true,
+                        price: true
+                    }
+                }
+            }
+        })
+
+        if (!Array.isArray(allOrder)) {
+            return res.status(400).json({message: 'allorder fetching error'})
+        }
+
+        return res.status(200).json({
+            message: allOrder.length > 0 ? 'all orders fetched successfully' : 'no order yet',
+            allOrder
+        })
+
+
+    } catch (error) {
+        return res.status(500).json({ message: 'error getting all orders' })
+    }
+}
+
 
 
 
@@ -107,5 +143,6 @@ export {
     getAllUsers,
     getAllVendors,
     approveVendor,
-    rejectVendor
+    rejectVendor,
+    allOrders,
 }

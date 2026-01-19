@@ -115,9 +115,91 @@ const getServiceById = async (req, res) => {
 }
 
 
+const getAllOrder = async (req, res) => {
+    try {
+
+        const allOrders = await prisma.order.findMany({
+            where: {
+                userId: req.user.id
+            },
+            include: {
+                vendor: {
+                    select: {
+                        company: true,
+                    }
+                },
+                service: {
+                    select: {
+                        title: true,
+                        price: true
+                    }
+                }
+            }
+        })
+
+
+        if (!Array.isArray(allOrders)) {
+            return res.status(400).json({ message: 'error getting orders list' })
+        }
+
+        return res.status(200).json({
+            message: allOrders.length > 0 ? 'orders fetched succcessfully' : 'no orders yet',
+            allOrders
+        })
+
+    } catch (error) {
+        return res.status(500).json({ message: 'error while getting all orders by a user' })
+    }
+}
+
+
+const getOrderById = async (req, res) => {
+    try {
+
+        const orderId = req.params.id
+
+        const order = await prisma.order.findFirst({
+            where: {
+                id: orderId,
+                userId: req.user.id
+            },
+            include: {
+                vendor: {
+                    select: {
+                        company: true,
+                    }
+                },
+                service: {
+                    select: {
+                        title: true,
+                        price: true
+                    }
+                }
+            }
+        })
+
+        if(!order) {
+            return res.status(400).json({message: 'you are not authorized to get this order detail or you have not placed this order'})
+        }
+
+        return res.status(200).json({
+            message: 'order detail fetched successfuly',
+            order
+        })
+
+    } catch (error) {
+        return res.status(500).json({ message: 'error getting single order' })
+    }
+}
+
+
+
+
 
 export {
     applyVendor,
     getAllServices,
-    getServiceById
+    getServiceById,
+    getAllOrder,
+    getOrderById,
 }
