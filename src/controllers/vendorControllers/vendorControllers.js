@@ -150,7 +150,7 @@ const upadteSingleService = async (req, res) => {
 
 
 const deleteServiceById = async (req, res) => {
-    
+
     try {
 
         const serviceId = req.params.id
@@ -164,8 +164,8 @@ const deleteServiceById = async (req, res) => {
             }
         })
 
-        if(!existingService) {
-            return res.status(400).json({message: 'service not found to delete'})
+        if (!existingService) {
+            return res.status(400).json({ message: 'service not found to delete' })
         }
 
         const deletedService = await prisma.service.delete({
@@ -179,7 +179,7 @@ const deleteServiceById = async (req, res) => {
 
     } catch (error) {
         console.log(error);
-        
+
         return res.status(500).json({ message: 'error while deleting this service' })
     }
 }
@@ -187,11 +187,25 @@ const deleteServiceById = async (req, res) => {
 
 const myAllOrders = async (req, res) => {
     try {
-        
+
         const allOrders = await prisma.order.findMany({
             where: {
                 vendor: {
                     userId: req.user.id
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        name: true,
+                        email: true
+                    }
+                },
+                service: {
+                    select: {
+                        title: true,
+                        price: true
+                    }
                 }
             }
         })
@@ -202,7 +216,149 @@ const myAllOrders = async (req, res) => {
         })
 
     } catch (error) {
-        return res.status(500).json({message: 'error while fetching all your orders'})
+        return res.status(500).json({ message: 'error while fetching all your orders' })
+    }
+}
+
+
+const myAllPaidOrders = async (req, res) => {
+    try {
+
+        const allPaidOrders = await prisma.order.findMany({
+            where: {
+                vendor: {
+                    userId: req.user.id
+                },
+                ordStatus: 'PAID'
+            },
+            include: {
+                user: {
+                    select: {
+                        name: true,
+                        email: true
+                    }
+                },
+                service: {
+                    select: {
+                        title: true,
+                        price: true
+                    }
+                }
+            }
+        })
+
+        return res.status(200).json({
+            message: allPaidOrders.length > 0 ? 'orders fetched successfully' : 'no paid orders yet',
+            allPaidOrders
+        })
+
+    } catch (error) {
+        console.log(error);
+
+        return res.status(500).json({ message: 'error while getting all paid orders' })
+    }
+}
+
+
+const acceptPaidOrder = async (req, res) => {
+    try {
+
+        const orderId = req.params.id;
+
+        const verifyOrder = await prisma.order.findFirst({
+            where: {
+                id: orderId,
+                vendor: {
+                    userId: req.user.id
+                }
+            }
+        })
+
+        if (!verifyOrder) {
+            return res.status(403).json({ message: 'You are not authorized to accept this order' })
+        }
+
+        if (verifyOrder.ordStatus === 'ACCEPTED') {
+            return res.status(400).json({ message: 'Order already accepted' })
+        }
+
+        if (verifyOrder.ordStatus !== 'PAID') {
+            return res.status(400).json({ message: 'unpaid order: can not accept' })
+        }
+
+        const acceptedOrder = await prisma.order.update({
+            where: {
+                id: orderId,
+                ordStatus: 'PAID'
+            },
+            data: {
+                ordStatus: 'ACCEPTED'
+            }
+        })
+
+        if (!acceptedOrder) {
+            return res.status(400).json({
+                message: 'Order could not be accepted'
+            });
+        }
+
+        return res.status(200).json({
+            message: 'order accepted',
+            acceptedOrder
+        })
+
+
+
+    } catch (error) {
+        return res.status(500).json({ message: 'error while acepting order' })
+    }
+}
+
+
+const completeOrder = async (req, res) => {
+    try {
+
+        const orderId = req.params.id
+
+        const verifyOrder = await prisma.order.findFirst({
+            where: {
+                id: orderId,
+                vendor: {
+                    userId: req.user.id
+                }
+            }
+        })
+
+        if (!verifyOrder) {
+            return res.status(403).json({ message: 'order do not exist or You are not authorized to complete this order' })
+        }
+
+        if (verifyOrder.ordStatus !== 'ACCEPTED') {
+            return res.status(400).json({ message: 'this order was not accepted' })
+        }
+
+        const completedOrder = await prisma.order.update({
+            where: {
+                id: orderId,
+                ordStatus: 'ACCEPTED'
+            },
+            data: {
+                ordStatus: 'COMPLETED'
+            }
+        })
+
+        if (!completedOrder) {
+            return res.status(400).json({ message: 'order cound not be completed' })
+        }
+
+        return res.status(200).json({
+            message: 'order completed',
+            completedOrder
+        })
+
+
+    } catch (error) {
+        return res.status(500).json({ message: 'error while updated order as COMPLETE' })
     }
 }
 
@@ -217,4 +373,7 @@ export {
     upadteSingleService,
     deleteServiceById,
     myAllOrders,
+    myAllPaidOrders,
+    acceptPaidOrder,
+    completeOrder
 }
